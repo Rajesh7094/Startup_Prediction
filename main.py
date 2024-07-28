@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import subprocess
-import openpyxl
 
 # Function to create a signup form with additional fields
 def signup():
@@ -18,9 +17,20 @@ def signup():
     if st.button("Sign Up"):
         if password == confirm_password:
             if username not in df['Username'].values:
-                # Add new user to the Excel file
-                df.loc[len(df.index)] = [username, password, name, age, sex, working_status, company_name]
-                df.to_excel("user_credentials.xlsx", index=False)
+                # Add new user to the DataFrame
+                new_user = pd.DataFrame({
+                    'Username': [username],
+                    'Password': [password],
+                    'Name': [name],
+                    'Age': [age],
+                    'Sex': [sex],
+                    'Working Status': [working_status],
+                    'Company Name': [company_name]
+                })
+                # Append new user to the existing DataFrame
+                updated_df = pd.concat([df, new_user], ignore_index=True)
+                # Save the updated DataFrame to the Excel file
+                updated_df.to_excel("user_credentials.xlsx", index=False, engine='xlsxwriter')
                 st.success("Signed up successfully! Please log in.")
             else:
                 st.warning("Username already exists. Please choose a different username.")
@@ -49,11 +59,9 @@ def login():
         else:
             st.warning("Username not found. Please sign up.")
 
-
-
 # Load existing user credentials from Excel file or create a new DataFrame if file doesn't exist
 try:
-    df = pd.read_excel("user_credentials.xlsx")
+    df = pd.read_excel("user_credentials.xlsx", engine='openpyxl')
 except FileNotFoundError:
     df = pd.DataFrame(columns=['Username', 'Password', 'Name', 'Age', 'Sex', 'Working Status', 'Company Name'])
 
